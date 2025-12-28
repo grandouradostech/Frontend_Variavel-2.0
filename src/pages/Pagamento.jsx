@@ -1,47 +1,44 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Calendar, DollarSign, Download, AlertCircle, Wallet } from 'lucide-react';
+import { Calendar, Download, AlertCircle, Wallet } from 'lucide-react';
+import { useFilters } from '../context/FilterContext'; // <--- IMPORTAR
 
 const Pagamento = () => {
+  const { filters, setFilters, updateCache, getCachedData } = useFilters(); // <--- USAR
   const [data, setData] = useState({ motoristas: [], ajudantes: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('motoristas');
 
-  // Filtros de Data
-  const [dataInicio, setDataInicio] = useState('');
-  const [dataFim, setDataFim] = useState('');
-
   // Carregar dados
-  const fetchPagamento = async () => {
+  const fetchPagamento = async (force = false) => {
+    // Verifica Cache
+    if (!force) {
+        const cached = getCachedData('pagamento');
+        if (cached) {
+            setData(cached);
+            return;
+        }
+    }
+
     setLoading(true);
     setError('');
     try {
       const params = new URLSearchParams();
-      if (dataInicio) params.append('data_inicio', dataInicio);
-      if (dataFim) params.append('data_fim', dataFim);
+      if (filters.start) params.append('data_inicio', filters.start);
+      if (filters.end) params.append('data_fim', filters.end);
       
-      // Se não houver datas, define padrão (mês atual)
-      if (!dataInicio || !dataFim) {
-          const hoje = new Date();
-          const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0];
-          const fim = hoje.toISOString().split('T')[0];
-          params.append('data_inicio', inicio);
-          params.append('data_fim', fim);
-          // Atualiza visualmente os inputs também
-          if(!dataInicio) setDataInicio(inicio);
-          if(!dataFim) setDataFim(fim);
-      }
-
       const response = await api.get(`/pagamento?${params.toString()}`);
       
       if (response.data.error) {
         setError(response.data.error);
       } else {
-        setData({
+        const result = {
             motoristas: response.data.motoristas || [],
             ajudantes: response.data.ajudantes || []
-        });
+        };
+        setData(result);
+        updateCache('pagamento', result); // Salva Cache
       }
     } catch (err) {
       console.error(err);
@@ -52,27 +49,22 @@ const Pagamento = () => {
   };
 
   useEffect(() => {
-    // Define datas iniciais ao montar
-    const hoje = new Date();
-    const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0];
-    const fim = hoje.toISOString().split('T')[0];
-    setDataInicio(inicio);
-    setDataFim(fim);
-  }, []);
+    fetchPagamento();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]); // Recarrega se filtros globais mudarem
 
-  // Função para Download do Excel
+  const handleDateChange = (field, value) => {
+      setFilters(prev => ({ ...prev, [field]: value }));
+  };
+
   const handleExport = () => {
     const token = localStorage.getItem('access_token');
     if (!token) {
         alert("Erro de autenticação. Faça login novamente.");
         return;
     }
-    
-    // Monta a URL de download direto (backend espera token na query string para downloads)
-    // Ajuste a URL base se necessário (aqui assume localhost:8000 padrão do axios)
     const baseURL = api.defaults.baseURL || 'http://127.0.0.1:8000';
-    const downloadUrl = `${baseURL}/pagamento/exportar?data_inicio=${dataInicio}&data_fim=${dataFim}&token=${token}`;
-    
+    const downloadUrl = `${baseURL}/pagamento/exportar?data_inicio=${filters.start}&data_fim=${filters.end}&token=${token}`;
     window.open(downloadUrl, '_blank');
   };
 
@@ -82,8 +74,6 @@ const Pagamento = () => {
   };
 
   const listaAtual = activeTab === 'motoristas' ? data.motoristas : data.ajudantes;
-
-  // Totais do rodapé
   const totalGeral = listaAtual.reduce((acc, item) => acc + (parseFloat(item.total_a_pagar) || 0), 0);
 
   return (
@@ -106,8 +96,8 @@ const Pagamento = () => {
                     <input 
                         type="date" 
                         className="pl-8 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={dataInicio}
-                        onChange={(e) => setDataInicio(e.target.value)}
+                        value={filters.start}
+                        onChange={(e) => handleDateChange('start', e.target.value)}
                     />
                 </div>
             </div>
@@ -118,13 +108,13 @@ const Pagamento = () => {
                     <input 
                         type="date" 
                         className="pl-8 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={dataFim}
-                        onChange={(e) => setDataFim(e.target.value)}
+                        value={filters.end}
+                        onChange={(e) => handleDateChange('end', e.target.value)}
                     />
                 </div>
             </div>
             <button 
-                onClick={fetchPagamento}
+                onClick={() => fetchPagamento(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium h-[38px]"
             >
                 Calcular
