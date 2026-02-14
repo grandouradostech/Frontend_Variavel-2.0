@@ -1,29 +1,56 @@
 import { useContext, useEffect, useState } from 'react';
 import api from '../services/api';
+<<<<<<< HEAD
 import { Download, AlertCircle, Wallet } from 'lucide-react';
 import { DateRangeContext } from '../context/DateRangeContext';
 
 const Pagamento = () => {
   const { dataInicio, dataFim } = useContext(DateRangeContext);
+=======
+import { Calendar, Download, AlertCircle, Wallet } from 'lucide-react';
+import { useFilters } from '../context/FilterContext';
+
+const Pagamento = () => {
+  const { filters, setFilters, updateCache, getCachedData } = useFilters();
+>>>>>>> 725bf39c07d041b12c30db695b890b2c33c1b67e
   const [data, setData] = useState({ motoristas: [], ajudantes: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('motoristas');
 
   // Carregar dados
-  const fetchPagamento = async () => {
+  const fetchPagamento = async (force = false) => {
+    // Verifica Cache
+    if (!force) {
+        const cached = getCachedData('pagamento');
+        if (cached) {
+            setData(cached);
+            return;
+        }
+    }
+
     setLoading(true);
     setError('');
     try {
+<<<<<<< HEAD
       const response = await api.get('/pagamento');
+=======
+      const params = new URLSearchParams();
+      if (filters.start) params.append('data_inicio', filters.start);
+      if (filters.end) params.append('data_fim', filters.end);
+      
+      const response = await api.get(`/pagamento?${params.toString()}`);
+>>>>>>> 725bf39c07d041b12c30db695b890b2c33c1b67e
       
       if (response.data.error) {
         setError(response.data.error);
       } else {
-        setData({
+        const result = {
             motoristas: response.data.motoristas || [],
             ajudantes: response.data.ajudantes || []
-        });
+        };
+        setData(result);
+        updateCache('pagamento', result);
       }
     } catch (err) {
       console.error(err);
@@ -35,15 +62,27 @@ const Pagamento = () => {
 
   useEffect(() => {
     fetchPagamento();
+<<<<<<< HEAD
   }, [dataInicio, dataFim]);
 
   // Função para Download do Excel
   const handleExport = async () => {
+=======
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
+
+  const handleDateChange = (field, value) => {
+      setFilters(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleExport = () => {
+>>>>>>> 725bf39c07d041b12c30db695b890b2c33c1b67e
     const token = localStorage.getItem('access_token');
     if (!token) {
         alert("Erro de autenticação. Faça login novamente.");
         return;
     }
+<<<<<<< HEAD
     
     try {
       const response = await api.get('/pagamento/exportar', {
@@ -66,6 +105,11 @@ const Pagamento = () => {
       console.error("Erro ao exportar:", err);
       alert("Erro ao exportar o relatório. Verifique se há dados para o período.");
     }
+=======
+    const baseURL = api.defaults.baseURL || 'http://127.0.0.1:8000';
+    const downloadUrl = `${baseURL}/pagamento/exportar?data_inicio=${filters.start}&data_fim=${filters.end}&token=${token}`;
+    window.open(downloadUrl, '_blank');
+>>>>>>> 725bf39c07d041b12c30db695b890b2c33c1b67e
   };
 
   const formatMoney = (val) => {
@@ -74,8 +118,6 @@ const Pagamento = () => {
   };
 
   const listaAtual = activeTab === 'motoristas' ? data.motoristas : data.ajudantes;
-
-  // Totais do rodapé
   const totalGeral = listaAtual.reduce((acc, item) => acc + (parseFloat(item.total_a_pagar) || 0), 0);
 
   return (
@@ -91,8 +133,35 @@ const Pagamento = () => {
         </div>
 
         <div className="flex flex-wrap gap-2 items-end">
+<<<<<<< HEAD
+=======
+            <div>
+                <label className="block text-xs text-gray-500 mb-1">Início</label>
+                <div className="relative">
+                    <Calendar className="absolute left-2 top-2.5 text-gray-400" size={16}/>
+                    <input 
+                        type="date" 
+                        className="pl-8 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                        value={filters.start}
+                        onChange={(e) => handleDateChange('start', e.target.value)}
+                    />
+                </div>
+            </div>
+            <div>
+                <label className="block text-xs text-gray-500 mb-1">Fim</label>
+                <div className="relative">
+                    <Calendar className="absolute left-2 top-2.5 text-gray-400" size={16}/>
+                    <input 
+                        type="date" 
+                        className="pl-8 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                        value={filters.end}
+                        onChange={(e) => handleDateChange('end', e.target.value)}
+                    />
+                </div>
+            </div>
+>>>>>>> 725bf39c07d041b12c30db695b890b2c33c1b67e
             <button 
-                onClick={fetchPagamento}
+                onClick={() => fetchPagamento(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium h-[38px]"
             >
                 Calcular
@@ -160,9 +229,13 @@ const Pagamento = () => {
                 <>
                     {listaAtual.map((row, index) => (
                     <tr key={index} className="hover:bg-gray-50 transition-colors">
+                        {/* --- COLUNA COLABORADOR ATUALIZADA COM COD --- */}
                         <td className="py-3 px-4">
                             <div className="font-medium text-gray-800">{row.nome || `COD ${row.cod}`}</div>
-                            <div className="text-xs text-gray-400">CPF: {row.cpf || '-'}</div>
+                            <div className="flex gap-3 text-xs text-gray-500 mt-0.5">
+                                {row.cod && <span className="bg-gray-100 px-1.5 rounded border border-gray-200">COD: {row.cod}</span>}
+                                {row.cpf && <span>CPF: {row.cpf}</span>}
+                            </div>
                         </td>
                         <td className="py-3 px-4 text-right text-gray-600">
                             {formatMoney(row.premio_caixas)}
