@@ -21,7 +21,7 @@ const Login = () => {
     const result = await login(username, passToSend);
     
     if (result.success) {
-      navigate('/dashboard'); // Redireciona após sucesso
+      navigate('/home'); // Redireciona após sucesso
     } else {
       setError(result.message);
     }
@@ -53,12 +53,13 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="username">
                 {isAdmin ? "Utilizador" : "CPF (apenas números)"}
             </label>
             <div className="relative">
               <User className="absolute left-3 top-3 text-gray-400" size={20} />
               <input
+                id="username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -71,10 +72,11 @@ const Login = () => {
 
           {isAdmin && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="password">Senha</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
                 <input
+                  id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

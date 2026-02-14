@@ -9,6 +9,12 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null); // Added error state
 
+  const logout = () => {
+    localStorage.removeItem('access_token');
+    setUser(null);
+    setError(null); // Clear error on logout
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('access_token');
     if (token) {
@@ -18,7 +24,7 @@ export const AuthProvider = ({ children }) => {
         if (decoded.exp * 1000 < Date.now()) {
           logout();
         } else {
-          setUser({ username: decoded.sub, role: decoded.role });
+          setUser({ username: decoded.sub, role: decoded.role, cpf: decoded.cpf || '' });
         }
       } catch (error) {
         console.error("Erro ao decodificar o token:", error);
@@ -48,7 +54,7 @@ export const AuthProvider = ({ children }) => {
       
       // Decodificar para atualizar o estado imediatamente
       const decoded = jwtDecode(access_token);
-      setUser({ username: decoded.sub, role: role });
+      setUser({ username: decoded.sub, role: role, cpf: decoded.cpf || '' });
       setError(null); // Clear any previous errors
 
       return { success: true };
@@ -61,12 +67,6 @@ export const AuthProvider = ({ children }) => {
         message: errorMessage
       };
     }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('access_token');
-    setUser(null);
-    setError(null); // Clear error on logout
   };
 
   return (

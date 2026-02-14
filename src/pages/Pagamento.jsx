@@ -1,39 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import api from '../services/api';
-import { Calendar, DollarSign, Download, AlertCircle, Wallet } from 'lucide-react';
+import { Download, AlertCircle, Wallet } from 'lucide-react';
+import { DateRangeContext } from '../context/DateRangeContext';
 
 const Pagamento = () => {
+  const { dataInicio, dataFim } = useContext(DateRangeContext);
   const [data, setData] = useState({ motoristas: [], ajudantes: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('motoristas');
-
-  // Filtros de Data
-  const [dataInicio, setDataInicio] = useState('');
-  const [dataFim, setDataFim] = useState('');
 
   // Carregar dados
   const fetchPagamento = async () => {
     setLoading(true);
     setError('');
     try {
-      const params = new URLSearchParams();
-      if (dataInicio) params.append('data_inicio', dataInicio);
-      if (dataFim) params.append('data_fim', dataFim);
-      
-      // Se não houver datas, define padrão (mês atual)
-      if (!dataInicio || !dataFim) {
-          const hoje = new Date();
-          const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0];
-          const fim = hoje.toISOString().split('T')[0];
-          params.append('data_inicio', inicio);
-          params.append('data_fim', fim);
-          // Atualiza visualmente os inputs também
-          if(!dataInicio) setDataInicio(inicio);
-          if(!dataFim) setDataFim(fim);
-      }
-
-      const response = await api.get(`/pagamento?${params.toString()}`);
+      const response = await api.get('/pagamento');
       
       if (response.data.error) {
         setError(response.data.error);
@@ -52,28 +34,38 @@ const Pagamento = () => {
   };
 
   useEffect(() => {
-    // Define datas iniciais ao montar
-    const hoje = new Date();
-    const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0];
-    const fim = hoje.toISOString().split('T')[0];
-    setDataInicio(inicio);
-    setDataFim(fim);
-  }, []);
+    fetchPagamento();
+  }, [dataInicio, dataFim]);
 
   // Função para Download do Excel
-  const handleExport = () => {
+  const handleExport = async () => {
     const token = localStorage.getItem('access_token');
     if (!token) {
         alert("Erro de autenticação. Faça login novamente.");
         return;
     }
     
-    // Monta a URL de download direto (backend espera token na query string para downloads)
-    // Ajuste a URL base se necessário (aqui assume localhost:8000 padrão do axios)
-    const baseURL = api.defaults.baseURL || 'http://127.0.0.1:8000';
-    const downloadUrl = `${baseURL}/pagamento/exportar?data_inicio=${dataInicio}&data_fim=${dataFim}&token=${token}`;
-    
-    window.open(downloadUrl, '_blank');
+    try {
+      const response = await api.get('/pagamento/exportar', {
+        responseType: 'blob', // Importante para receber o arquivo binário
+      });
+
+      // Cria um link temporário para download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `relatorio_pagamento_${dataInicio}_${dataFim}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      
+      // Limpeza
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+    } catch (err) {
+      console.error("Erro ao exportar:", err);
+      alert("Erro ao exportar o relatório. Verifique se há dados para o período.");
+    }
   };
 
   const formatMoney = (val) => {
@@ -99,30 +91,6 @@ const Pagamento = () => {
         </div>
 
         <div className="flex flex-wrap gap-2 items-end">
-            <div>
-                <label className="block text-xs text-gray-500 mb-1">Início</label>
-                <div className="relative">
-                    <Calendar className="absolute left-2 top-2.5 text-gray-400" size={16}/>
-                    <input 
-                        type="date" 
-                        className="pl-8 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={dataInicio}
-                        onChange={(e) => setDataInicio(e.target.value)}
-                    />
-                </div>
-            </div>
-            <div>
-                <label className="block text-xs text-gray-500 mb-1">Fim</label>
-                <div className="relative">
-                    <Calendar className="absolute left-2 top-2.5 text-gray-400" size={16}/>
-                    <input 
-                        type="date" 
-                        className="pl-8 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={dataFim}
-                        onChange={(e) => setDataFim(e.target.value)}
-                    />
-                </div>
-            </div>
             <button 
                 onClick={fetchPagamento}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium h-[38px]"

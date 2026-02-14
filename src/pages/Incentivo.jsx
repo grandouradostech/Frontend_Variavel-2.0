@@ -108,10 +108,11 @@ const Incentivo = () => {
 
         <form onSubmit={handleFilter} className="flex flex-wrap gap-2 items-end">
             <div>
-                <label className="block text-xs text-gray-500 mb-1">Início</label>
+                <label className="block text-xs text-gray-500 mb-1" htmlFor="dataInicio">Início</label>
                 <div className="relative">
                     <Calendar className="absolute left-2 top-2.5 text-gray-400" size={16}/>
                     <input 
+                        id="dataInicio"
                         type="date" 
                         className="pl-8 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                         value={dataInicio}
@@ -120,10 +121,11 @@ const Incentivo = () => {
                 </div>
             </div>
             <div>
-                <label className="block text-xs text-gray-500 mb-1">Fim</label>
+                <label className="block text-xs text-gray-500 mb-1" htmlFor="dataFim">Fim</label>
                 <div className="relative">
                     <Calendar className="absolute left-2 top-2.5 text-gray-400" size={16}/>
                     <input 
+                        id="dataFim"
                         type="date" 
                         className="pl-8 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                         value={dataFim}

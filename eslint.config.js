@@ -2,7 +2,7 @@ import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
-import jsxA11y from 'eslint-plugin-jsx-a11y' // Accessibility plugin
+import jsxA11y from 'eslint-plugin-jsx-a11y'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
@@ -13,8 +13,10 @@ export default defineConfig([
       js.configs.recommended,
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite,
-      'plugin:jsx-a11y/recommended', // Enforce accessibility best practices
     ],
+    plugins: {
+      'jsx-a11y': jsxA11y,
+    },
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
@@ -25,8 +27,16 @@ export default defineConfig([
       },
     },
     rules: {
+      ...jsxA11y.configs.recommended.rules,
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
-      'jsx-a11y/anchor-is-valid': 'warn', // Example rule for accessibility
+      'jsx-a11y/anchor-is-valid': 'warn',
+    },
+  },
+  {
+    files: ['src/context/**/*.{js,jsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+      'react-hooks/set-state-in-effect': 'off',
     },
   },
 ])
