@@ -2,7 +2,8 @@ import axios from 'axios';
 
 // URL da sua API FastAPI (confirme se a porta é 8000)
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000',
+  //baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000',
+  baseURL: import.meta.env.VITE_API_URL || 'https://backend-variavel-2-0.onrender.com',
 });
 
 // Interceptor: Adiciona o Token a TODOS os pedidos automaticamente
