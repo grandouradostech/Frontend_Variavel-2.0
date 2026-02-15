@@ -1,36 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import api from '../services/api';
-import { Calendar, Search, Filter, TrendingUp, AlertCircle, CheckCircle } from 'lucide-react';
+import { Search, TrendingUp, AlertCircle, CheckCircle } from 'lucide-react';
+import { DateRangeContext } from '../context/DateRangeContext';
 
 const Incentivo = () => {
+  const { dataInicio, dataFim } = useContext(DateRangeContext);
   const [data, setData] = useState({ motoristas: [], ajudantes: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('motoristas');
 
-  // Filtros
-  const [dataInicio, setDataInicio] = useState('');
-  const [dataFim, setDataFim] = useState('');
   const [search, setSearch] = useState('');
 
-  const fetchIncentivo = async () => {
+  const fetchIncentivo = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       const params = new URLSearchParams();
       if (dataInicio) params.append('data_inicio', dataInicio);
       if (dataFim) params.append('data_fim', dataFim);
-      
-      // O endpoint espera formato ISO ou YYYY-MM-DD. O input type="date" já fornece YYYY-MM-DD
-      // Se não houver datas, o backend assume o mês atual
-      if (!dataInicio || !dataFim) {
-          // Opcional: definir datas padrão aqui se o backend exigir
-          const hoje = new Date();
-          const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0];
-          const fim = hoje.toISOString().split('T')[0];
-          params.append('data_inicio', inicio);
-          params.append('data_fim', fim);
-      }
 
       const response = await api.get(`/incentivo/?${params.toString()}`);
       
@@ -48,22 +36,11 @@ const Incentivo = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dataFim, dataInicio]);
 
   useEffect(() => {
-    // Define datas iniciais padrão para os inputs
-    const hoje = new Date();
-    const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0];
-    const fim = hoje.toISOString().split('T')[0];
-    setDataInicio(inicio);
-    setDataFim(fim);
-  }, []);
-
-  // Dispara a busca quando as datas mudam (ou no clique do botão filtrar)
-  const handleFilter = (e) => {
-    e.preventDefault();
     fetchIncentivo();
-  };
+  }, [fetchIncentivo]);
 
   // Filtra a lista localmente pelo nome/cpf
   const filterList = (list) => {
@@ -105,42 +82,6 @@ const Incentivo = () => {
           </h1>
           <p className="text-gray-500 text-sm">Acompanhamento de devoluções, rating e refugo</p>
         </div>
-
-        <form onSubmit={handleFilter} className="flex flex-wrap gap-2 items-end">
-            <div>
-                <label className="block text-xs text-gray-500 mb-1" htmlFor="dataInicio">Início</label>
-                <div className="relative">
-                    <Calendar className="absolute left-2 top-2.5 text-gray-400" size={16}/>
-                    <input 
-                        id="dataInicio"
-                        type="date" 
-                        className="pl-8 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={dataInicio}
-                        onChange={(e) => setDataInicio(e.target.value)}
-                    />
-                </div>
-            </div>
-            <div>
-                <label className="block text-xs text-gray-500 mb-1" htmlFor="dataFim">Fim</label>
-                <div className="relative">
-                    <Calendar className="absolute left-2 top-2.5 text-gray-400" size={16}/>
-                    <input 
-                        id="dataFim"
-                        type="date" 
-                        className="pl-8 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={dataFim}
-                        onChange={(e) => setDataFim(e.target.value)}
-                    />
-                </div>
-            </div>
-            <button 
-                type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors h-[38px]"
-                title="Atualizar Dados"
-            >
-                <Filter size={20} />
-            </button>
-        </form>
       </div>
 
       {/* Abas e Busca */}
@@ -203,7 +144,7 @@ const Incentivo = () => {
               {loading ? (
                 <tr><td colSpan="8" className="py-8 text-center text-gray-500">Calculando indicadores...</td></tr>
               ) : listaFiltrada.length === 0 ? (
-                <tr><td colSpan="8" className="py-8 text-center text-gray-500">Nenhum registro encontrado. Clique em filtrar para carregar.</td></tr>
+                <tr><td colSpan="8" className="py-8 text-center text-gray-500">Nenhum registro encontrado para o período.</td></tr>
               ) : (
                 listaFiltrada.map((row, index) => (
                   <tr key={index} className="hover:bg-gray-50 transition-colors">
