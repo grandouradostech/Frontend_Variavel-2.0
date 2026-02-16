@@ -33,9 +33,8 @@ const Login = () => {
         <div className="flex justify-center mb-6 text-blue-600">
           <Truck size={48} />
         </div>
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Sistema de Gestão</h2>
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Sistema de Variáveis</h2>
         <p className="text-center text-gray-500 mb-8">Entre para consultar a sua variável</p>
-
         <div className="flex justify-center mb-6 bg-gray-100 p-1 rounded-lg">
             <button 
                 className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${!isAdmin ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}
