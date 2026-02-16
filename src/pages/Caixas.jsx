@@ -58,9 +58,12 @@ const Caixas = () => {
   }, [activeTab, dados.ajudantes, dados.motoristas]);
 
   const formatMoney = (value) => {
-    const v = parseFloat(value) || 0;
-    return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
+  const v = parseFloat(value) || 0;
+  return v.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
 
   return (
     <div className="space-y-6">
@@ -111,7 +114,7 @@ const Caixas = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-500">Prémio</div>
+                  <div className="text-xs text-gray-500">PONTOS</div>
                   <div className="font-bold text-green-700">{formatMoney(item.total_premio)}</div>
                 </div>
               </div>
@@ -132,7 +135,7 @@ const Caixas = () => {
                   <div className="font-semibold text-gray-800">{formatMoney(item.valor_por_caixa)}</div>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                  <div className="text-xs text-gray-500">Prémio total</div>
+                  <div className="text-xs text-gray-500">PONTOS TOTAL</div>
                   <div className="font-semibold text-gray-800">{formatMoney(item.total_premio)}</div>
                 </div>
               </div>
@@ -156,7 +159,7 @@ const Caixas = () => {
                 <th className="px-6 py-4 font-semibold text-gray-700 text-center">ANTIGUIDADE</th>
                 <th className="px-6 py-4 font-semibold text-gray-700 text-right">TOTAL CAIXAS</th>
                 <th className="px-6 py-4 font-semibold text-gray-700 text-right">VALOR / CX</th>
-                <th className="px-6 py-4 font-semibold text-gray-700 text-right">PRÉMIO TOTAL</th>
+                <th className="px-6 py-4 font-semibold text-gray-700 text-right">PONTOS TOTAL</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
